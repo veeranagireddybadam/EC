@@ -1,0 +1,30 @@
+name: ExpressCinema CI
+
+on:
+  push:
+    branches:
+      - ci-cd
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v6
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Build Spring Boot application
+        run: |
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests
