@@ -1,4 +1,4 @@
-name: ExpressCinema CI
+name: ExpressCinema CI/CD
 
 on:
   push:
@@ -9,8 +9,12 @@ on:
     branches:
       - main
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,3 +32,27 @@ jobs:
         run: |
           chmod +x mvnw
           ./mvnw clean package -DskipTests
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: arn:aws:iam::886728133526:role/ExpressCinemaGitHubActionsRole
+          aws-region: eu-north-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image
+        run: |
+          docker build -t express-cinema .
+
+      - name: Tag Docker image
+        run: |
+          docker tag express-cinema:latest \
+            886728133526.dkr.ecr.eu-north-1.amazonaws.com/express-cinema:latest
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push \
+            886728133526.dkr.ecr.eu-north-1.amazonaws.com/express-cinema:latest
